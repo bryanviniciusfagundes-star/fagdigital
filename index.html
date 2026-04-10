@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BryanHQ — Dashboard</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect, useCallback } = React;
+
+
+// ─── CONFIG SUPABASE ───────────────────────────────────────────────────────────
+const SUPA_URL = "https://ecxpbpzkuscgkyozrqaw.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjeHBicHprdXNjZ2t5b3pycWF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MjAwOTEsImV4cCI6MjA5MTM5NjA5MX0.MdPrSmEEN-9xaSrPbx4LYB2II_jQUuAjWrIVhkr72v0";
+
+const supa = async (path, opts = {}) => {
+  const { prefer, headers: extraHeaders, ...restOpts } = opts;
+  const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+    headers: {
+      apikey: SUPA_KEY,
+      Authorization: `Bearer ${SUPA_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: prefer || "return=representation",
+      ...extraHeaders,
+    },
+    ...restOpts,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const fmt = (val, currency = "BRL", rate = 5) => {
+  const v = currency === "USD" ? val / rate : val;
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+  }).format(v || 0);
+};
+
+const fmtN = (n) => new Intl.NumberFormat("pt-BR").format(n || 0);
+
+const today = () => new Date().toISOString().split("T")[0];
+const monthStart = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+};
+
+// ─── THEME ───────────────────────────────────────────────────────────────────
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f5;
+    --text2: #8888aa;
+    --text3: #55556a;
+    --accent: #7c6af7;
+    --accent2: #a594ff;
+    --green: #2ecc8a;
+    --red: #ff5f6d;
+    --amber: #f5a623;
+    --blue: #4facfe;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font: 'Syne', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --sidebar: 220px;
+    --transition: 0.18s cubic-bezier(.4,0,.2,1);
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* LOGIN */
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+  .login-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(124,106,247,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .login-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 48px 40px;
+    width: 380px;
+    position: relative;
+    z-index: 1;
+  }
+  .login-logo {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .login-logo span { color: var(--accent2); }
+  .login-sub { color: var(--text2); font-size: 13px; margin-bottom: 36px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; letter-spacing: .03em; }
+  .field input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 13px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition), transform var(--transition);
+    margin-top: 8px;
+  }
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .err-msg { color: var(--red); font-size: 12px; margin-top: 10px; text-align: center; }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar);
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo span { color: var(--accent2); }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .nav-section { padding: 0 12px; margin-bottom: 4px; }
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 12px 8px 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    transition: all var(--transition);
+    margin-bottom: 2px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(124,106,247,0.15); color: var(--accent2); }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .sidebar-footer {
+    padding: 16px 12px;
+    border-top: 1px solid var(--border);
+  }
+  .btn-logout {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 9px;
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar); flex: 1; padding: 28px 32px; }
+
+  /* TOPBAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .topbar-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .topbar-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ctrl-select {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+  }
+  .ctrl-select:focus { border-color: var(--accent); }
+  .ctrl-input {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    outline: none;
+    width: 110px;
+  }
+  .ctrl-input:focus { border-color: var(--accent); }
+  .btn-sm {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent2); }
+  .btn-accent {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-accent:hover { opacity: 0.85; }
+
+  /* CARDS GRID */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color var(--transition);
+  }
+  .card:hover { border-color: var(--border2); }
+  .card-label {
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .card-value {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .card-sub { font-size: 11px; color: var(--text3); }
+  .card-accent-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .c-green { color: var(--green); }
+  .c-red { color: var(--red); }
+  .c-blue { color: var(--blue); }
+  .c-amber { color: var(--amber); }
+  .c-purple { color: var(--accent2); }
+
+  /* CHARTS AREA */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .chart-title { font-size: 13px; font-weight: 600; margin-bottom: 16px; color: var(--text2); }
+
+  /* TABLE */
+  .table-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-title { font-size: 13px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 12px 20px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* BADGE */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-green { background: rgba(46,204,138,0.12); color: var(--green); }
+  .badge-red { background: rgba(255,95,109,0.12); color: var(--red); }
+  .badge-amber { background: rgba(245,166,35,0.12); color: var(--amber); }
+  .badge-purple { background: rgba(124,106,247,0.15); color: var(--accent2); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+  }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 32px;
+    width: 480px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .modal-grid.full { grid-template-columns: 1fr; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+  .btn-cancel {
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 20px;
+    color: var(--text2);
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .btn-cancel:hover { border-color: var(--text2); color: var(--text); }
+  .btn-save {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 24px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity var(--transition);
+  }
+  .btn-save:hover { opacity: 0.85; }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* SECTION PAGES */
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .config-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .config-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .config-card-title { font-size: 13px; font-weight: 600; }
+  .config-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .config-item:last-child { border-bottom: none; }
+  .config-item-label { color: var(--text2); font-size: 12px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 48px 20px; color: var(--text3); font-size: 13px; }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; }
+
+  /* MINI BAR CHART */
+  .mini-bars { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+  .mini-bar { flex: 1; border-radius: 3px 3px 0 0; transition: opacity .2s; min-width: 4px; }
+  .mini-bar:hover { opacity: 0.75; }
+  .chart-labels { display: flex; gap: 4px; margin-top: 6px; }
+  .chart-label { flex: 1; font-size: 9px; color: var(--text3); text-align: center; font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* DONUT */
+  .donut-wrap { display: flex; align-items: center; gap: 20px; }
+  .donut-legend { flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* LOADING */
+  .loading { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--text3); font-size: 13px; gap: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    font-size: 13px;
+    z-index: 2000;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; padding: 16px; }
+    .charts-row { grid-template-columns: 1fr; }
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+`;
+
+// ─── MINI BAR CHART ───────────────────────────────────────────────────────────
+function MiniBarChart({ data, color }) {
+  const max = Math.max(...data.map((d) => d.value), 1);
+  return (
+    <div>
+      <div className="mini-bars">
+        {data.map((d, i) => (
+          <div
+            key={i}
+            className="mini-bar"
+            style={{
+              height: `${Math.max((d.value / max) * 100, 4)}%`,
+              background: color || "var(--accent)",
+              opacity: 0.7 + (i / data.length) * 0.3,
+            }}
+            title={`${d.label}: ${d.value}`}
+          />
+        ))}
+      </div>
+      <div className="chart-labels">
+        {data.map((d, i) => (
+          <div key={i} className="chart-label">{d.label}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── DONUT CHART ──────────────────────────────────────────────────────────────
+function DonutChart({ segments }) {
+  const total = segments.reduce((s, d) => s + d.value, 0);
+  let cum = 0;
+  const r = 40, cx = 50, cy = 50;
+  const paths = segments.map((seg) => {
+    const pct = total ? seg.value / total : 0;
+    const start = cum * 2 * Math.PI - Math.PI / 2;
+    cum += pct;
+    const end = cum * 2 * Math.PI - Math.PI / 2;
+    const laf = pct > 0.5 ? 1 : 0;
+    const x1 = cx + r * Math.cos(start);
+    const y1 = cy + r * Math.sin(start);
+    const x2 = cx + r * Math.cos(end);
+    const y2 = cy + r * Math.sin(end);
+    return { ...seg, d: pct === 0 ? "" : `M${cx},${cy} L${x1},${y1} A${r},${r},0,${laf},1,${x2},${y2} Z`, pct };
+  });
+  return (
+    <div className="donut-wrap">
+      <svg viewBox="0 0 100 100" style={{ width: 90, height: 90, flexShrink: 0 }}>
+        {paths.map((p, i) => p.d && <path key={i} d={p.d} fill={p.color} opacity={0.85} />)}
+        <circle cx={cx} cy={cy} r={28} fill="var(--bg2)" />
+        <text x={cx} y={cy - 5} textAnchor="middle" fill="var(--text)" fontSize="10" fontWeight="700" fontFamily="Syne, sans-serif">{total}</text>
+        <text x={cx} y={cy + 8} textAnchor="middle" fill="var(--text3)" fontSize="7" fontFamily="Syne, sans-serif">total</text>
+      </svg>
+      <div className="donut-legend">
+        {paths.map((p, i) => (
+          <div key={i} className="legend-item">
+            <div className="legend-dot" style={{ background: p.color }} />
+            <span style={{ color: "var(--text2)" }}>{p.label}</span>
+            <span style={{ marginLeft: "auto", color: "var(--text)", fontWeight: 600 }}>{fmtN(p.value)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function Toast({ msg, type, onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 3000);
+    return () => clearTimeout(t);
+  }, []);
+  return <div className={`toast ${type}`}>{msg}</div>;
+}
+
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+const ADMIN_USER = "bryan";
+const ADMIN_PASS = "Bryan@2025";
+
+function Login({ onLogin }) {
+  const [user, setUser] = useState("");
+  const [pass, setPass] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const submit = () => {
+    setLoading(true);
+    setErr("");
+    setTimeout(() => {
+      if (user === ADMIN_USER && pass === ADMIN_PASS) {
+        localStorage.setItem("dash_auth", "1");
+        onLogin();
+      } else {
+        setErr("Usuário ou senha incorretos.");
+      }
+      setLoading(false);
+    }, 600);
+  };
+
+  return (
+    <div className="login-wrap">
+      <div className="login-bg" />
+      <div className="login-card">
+        <div className="login-logo">Bryan<span>HQ</span></div>
+        <div className="login-sub">Painel de controle empresarial</div>
+        <div className="field">
+          <label>Usuário</label>
+          <input value={user} onChange={(e) => setUser(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+        </div>
+        <div className="field">
+          <label>Senha</label>
+          <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+        </div>
+        <button className="btn-primary" onClick={submit} disabled={loading}>
+          {loading ? "Entrando..." : "Entrar"}
+        </button>
+        {err && <div className="err-msg">{err}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function Dashboard({ currency, rate, dateFrom, dateTo, projectFilter }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [ftds, costs, spend, hotmart, leads] = await Promise.all([
+        supa(`ftds?ftd_date=gte.${dateFrom}&ftd_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ""}&select=*`),
+        supa(`costs?select=*`),
+        supa(`ad_spend?spend_date=gte.${dateFrom}&spend_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ""}&select=*`),
+        supa(`hotmart_sales?sale_date=gte.${dateFrom}&sale_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ""}&select=*`),
+        supa(`leads_cache?lead_date=gte.${dateFrom}&lead_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ""}&select=*`),
+      ]);
+
+      const totalFTDs = ftds.length;
+      const ftdsAI = ftds.filter((f) => f.is_ai_detected).length;
+      const ftdsManual = totalFTDs - ftdsAI;
+
+      const totalCPA = ftds.reduce((s, f) => {
+        const v = f.cpa_value || 0;
+        return s + (f.cpa_currency === "USD" ? v * rate : v);
+      }, 0);
+
+      const totalRevShare = 0;
+      const totalHotmart = hotmart.reduce((s, h) => {
+        const v = h.amount || 0;
+        return s + (h.currency === "USD" ? v * rate : v);
+      }, 0);
+      const faturamento = totalCPA + totalRevShare + totalHotmart;
+
+      const totalSpend = spend.reduce((s, a) => {
+        const v = a.amount || 0;
+        return s + (a.currency === "USD" ? v * rate : v);
+      }, 0);
+
+      const now = new Date();
+      const diffMs = new Date(dateTo) - new Date(dateFrom);
+      const diffDays = Math.max(diffMs / 86400000, 1);
+      const activeCosts = costs.filter((c) => c.is_active);
+      const costsInPeriod = activeCosts.reduce((s, c) => {
+        let monthly = c.amount;
+        if (c.recurrence === "annual") monthly = c.amount / 12;
+        if (c.recurrence === "once") monthly = c.amount;
+        if (c.recurrence === "daily") monthly = c.amount * 30;
+        const daily = monthly / 30;
+        const v = daily * diffDays;
+        return s + (c.currency === "USD" ? v * rate : v);
+      }, 0);
+
+      const totalCosts = totalSpend + costsInPeriod;
+      const lucro = faturamento - totalCosts;
+      const roi = totalCosts > 0 ? ((lucro / totalCosts) * 100).toFixed(1) : 0;
+
+      const totalLeads = leads.reduce((s, l) => s + (l.count || 0), 0);
+      const cpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
+      const convRate = totalLeads > 0 ? ((totalFTDs / totalLeads) * 100).toFixed(2) : 0;
+
+      const byDay = {};
+      ftds.forEach((f) => {
+        byDay[f.ftd_date] = (byDay[f.ftd_date] || 0) + 1;
+      });
+      const spendByDay = {};
+      spend.forEach((s) => {
+        spendByDay[s.spend_date] = (spendByDay[s.spend_date] || 0) + (s.currency === "USD" ? s.amount * rate : s.amount);
+      });
+
+      const days = [];
+      const d = new Date(dateFrom);
+      const end = new Date(dateTo);
+      while (d <= end && days.length < 30) {
+        const key = d.toISOString().split("T")[0];
+        days.push({ label: key.slice(5), ftd: byDay[key] || 0, spend: spendByDay[key] || 0 });
+        d.setDate(d.getDate() + 1);
+      }
+
+      setData({
+        totalFTDs, ftdsAI, ftdsManual,
+        faturamento, totalHotmart, totalCPA, totalRevShare,
+        totalSpend, lucro, roi, totalLeads, cpl, convRate, costsInPeriod,
+        ftdsChart: days,
+        spendChart: days,
+        donut: [
+          { label: "CPA", value: Math.round(totalCPA / rate), color: "var(--accent)" },
+          { label: "Hotmart", value: Math.round(totalHotmart), color: "var(--green)" },
+          { label: "RevShare", value: Math.round(totalRevShare / rate), color: "var(--blue)" },
+        ].filter((d) => d.value > 0),
+      });
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  }, [dateFrom, dateTo, projectFilter, rate]);
+
+  useEffect(() => { load(); }, [load]);
+
+  if (loading) return <div className="loading"><div className="spinner" /> Carregando dados...</div>;
+  if (!data) return <div className="empty">Erro ao carregar dados.</div>;
+
+  const c = currency;
+
+  const cards = [
+    { label: "Leads no Funil", value: fmtN(data.totalLeads), sub: "total do período", color: "#4facfe", icon: "👥" },
+    { label: "Investimento", value: fmt(data.totalSpend, c, rate), sub: "Meta Ads", color: "var(--red)", icon: "📢" },
+    { label: "FTDs Confirmados", value: fmtN(data.totalFTDs), sub: `${data.ftdsManual} manual · ${data.ftdsAI} IA`, color: "var(--green)", icon: "✅" },
+    { label: "Faturamento Total", value: fmt(data.faturamento, c, rate), sub: "CPA + Hotmart + RevShare", color: "var(--accent2)", icon: "💰" },
+    { label: "Lucro Líquido", value: fmt(data.lucro, c, rate), sub: "após todos os custos", color: data.lucro >= 0 ? "var(--green)" : "var(--red)", icon: "📈" },
+    { label: "ROI", value: `${data.roi}%`, sub: "retorno sobre investimento", color: data.roi >= 0 ? "var(--green)" : "var(--red)", icon: "🎯" },
+    { label: "Conv. Lead → FTD", value: `${data.convRate}%`, sub: "taxa de conversão", color: "var(--amber)", icon: "⚡" },
+    { label: "Custo por Lead", value: fmt(data.cpl, c, rate), sub: "CPL médio", color: "#4facfe", icon: "📊" },
+    { label: "Fat. Infoproduto", value: fmt(data.totalHotmart, c, rate), sub: "Hotmart", color: "var(--green)", icon: "🛒" },
+    { label: "Custos Fixos", value: fmt(data.costsInPeriod, c, rate), sub: "no período", color: "var(--red)", icon: "🏢" },
+  ];
+
+  return (
+    <div>
+      <div className="cards-grid">
+        {cards.map((card, i) => (
+          <div key={i} className="card">
+            <div className="card-accent-line" style={{ background: card.color }} />
+            <div className="card-label">{card.label}</div>
+            <div className="card-value" style={{ color: card.color }}>{card.value}</div>
+            <div className="card-sub">{card.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="charts-row">
+        <div className="chart-card">
+          <div className="chart-title">FTDs por dia</div>
+          <MiniBarChart data={data.ftdsChart.map((d) => ({ label: d.label, value: d.ftd }))} color="var(--green)" />
+        </div>
+        <div className="chart-card">
+          <div className="chart-title">Investimento por dia (R$)</div>
+          <MiniBarChart data={data.spendChart.map((d) => ({ label: d.label, value: Math.round(d.spend) }))} color="var(--red)" />
+        </div>
+      </div>
+
+      {data.donut.length > 0 && (
+        <div className="chart-card" style={{ marginBottom: 24 }}>
+          <div className="chart-title">Composição do Faturamento</div>
+          <DonutChart segments={data.donut} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── FTD MODAL ────────────────────────────────────────────────────────────────
+function FTDModal({ onClose, onSaved, projects, casas }) {
+  const [form, setForm] = useState({
+    project_id: projects[0]?.id || "",
+    casa_id: casas[0]?.id || "",
+    ftd_date: today(),
+    is_ai_detected: false,
+    cpa_value: "",
+    cpa_currency: "USD",
+    notes: "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  const selectedCasa = casas.find((c) => c.id === form.casa_id);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await supa("ftds", {
+        method: "POST",
+        body: JSON.stringify({ ...form, cpa_value: parseFloat(form.cpa_value) || null }),
+      });
+      onSaved();
+    } catch (e) { console.error(e); }
+    setSaving(false);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-title">Lançar FTD</div>
+        <div className="modal-grid">
+          <div className="field">
+            <label>Projeto</label>
+            <select className="ctrl-select" style={{ width: "100%" }} value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })}>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Casa</label>
+            <select className="ctrl-select" style={{ width: "100%" }} value={form.casa_id} onChange={(e) => {
+              const c = casas.find((x) => x.id === e.target.value);
+              setForm({ ...form, casa_id: e.target.value, cpa_value: c?.cpa_value || "" });
+            }}>
+              {casas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Data</label>
+            <input className="ctrl-input" style={{ width: "100%" }} type="date" value={form.ftd_date} onChange={(e) => setForm({ ...form, ftd_date: e.target.value })} />
+          </div>
+          <div className="field">
+            <label>Tipo</label>
+            <select className="ctrl-select" style={{ width: "100%" }} value={form.is_ai_detected ? "ai" : "manual"} onChange={(e) => setForm({ ...form, is_ai_detected: e.target.value === "ai" })}>
+              <option value="manual">Manual</option>
+              <option value="ai">Via IA</option>
+            </select>
+          </div>
+          <div className="field">
+            <label>Valor CPA</label>
+            <input className="ctrl-input" style={{ width: "100%" }} type="number" placeholder={selectedCasa?.cpa_value || "0"} value={form.cpa_value} onChange={(e) => setForm({ ...form, cpa_value: e.target.value })} />
+          </div>
+          <div className="field">
+            <label>Moeda CPA</label>
+            <select className="ctrl-select" style={{ width: "100%" }} value={form.cpa_currency} onChange={(e) => setForm({ ...form, cpa_currency: e.target.value })}>
+              <option value="USD">USD</option>
+              <option value="BRL">BRL</option>
+            </select>
+          </div>
+        </div>
+        <div className="field" style={{ marginTop: 14 }}>
+          <label>Observações</label>
+          <input className="ctrl-input" style={{ width: "100%" }} placeholder="Opcional" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+        </div>
+        <div className="modal-actions">
+          <button className="btn-cancel" onClick={onClose}>Cancelar</button>
+          <button className="btn-save" onClick={save} disabled={saving}>{saving ? "Salvando..." : "Lançar FTD"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── FTDs PAGE ────────────────────────────────────────────────────────────────
+function FTDsPage({ projects, casas, onToast }) {
+  const [ftds, setFtds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await supa("ftds?select=*,projects(name),casas(name)&order=ftd_date.desc&limit=100");
+      setFtds(data);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  return (
+    <div>
+      {showModal && (
+        <FTDModal
+          projects={projects} casas={casas}
+          onClose={() => setShowModal(false)}
+          onSaved={() => { setShowModal(false); load(); onToast("FTD lançado!", "success"); }}
+        />
+      )}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div className="section-title">Lançamentos de FTD</div>
+        <button className="btn-accent" onClick={() => setShowModal(true)}>+ Lançar FTD</button>
+      </div>
+      <div className="table-card">
+        {loading ? (
+          <div className="loading"><div className="spinner" /> Carregando...</div>
+        ) : ftds.length === 0 ? (
+          <div className="empty"><div className="empty-icon">📋</div>Nenhum FTD lançado ainda.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Projeto</th>
+                <th>Casa</th>
+                <th>Tipo</th>
+                <th>CPA</th>
+                <th>Obs.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ftds.map((f) => (
+                <tr key={f.id}>
+                  <td style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{f.ftd_date}</td>
+                  <td>{f.projects?.name || "—"}</td>
+                  <td>{f.casas?.name || "—"}</td>
+                  <td>
+                    {f.is_ai_detected
+                      ? <span className="badge badge-purple">IA</span>
+                      : <span className="badge badge-green">Manual</span>}
+                  </td>
+                  <td style={{ fontFamily: "var(--mono)", fontSize: 12 }}>
+                    {f.cpa_value ? `${f.cpa_currency} ${f.cpa_value}` : "—"}
+                  </td>
+                  <td style={{ color: "var(--text3)", fontSize: 12 }}>{f.notes || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── CONFIGURAÇÕES ────────────────────────────────────────────────────────────
+function ConfigPage({ onToast, onRefresh }) {
+  const [projects, setProjects] = useState([]);
+  const [casas, setCasas] = useState([]);
+  const [costs, setCosts] = useState([]);
+  const [settings, setSettings] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(null);
+  const [form, setForm] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [p, c, co, s] = await Promise.all([
+        supa("projects?select=*,experts(name)"),
+        supa("casas?select=*"),
+        supa("costs?select=*"),
+        supa("settings?select=*"),
+      ]);
+      setProjects(p); setCasas(c); setCosts(co);
+      const sv = {}; s.forEach((x) => sv[x.key] = x.value);
+      setSettings(sv);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const openModal = (type, defaults = {}) => { setModal(type); setForm(defaults); };
+  const closeModal = () => { setModal(null); setForm({}); };
+
+  const saveProject = async () => {
+    setSaving(true);
+    try {
+      let expertId = form.expert_id;
+      if (form.expert_name) {
+        const ex = await supa("experts", { method: "POST", body: JSON.stringify({ name: form.expert_name }) });
+        expertId = ex[0]?.id;
+      }
+      await supa("projects", { method: "POST", body: JSON.stringify({ name: form.name, expert_id: expertId, status: "active" }) });
+      await load(); onRefresh(); closeModal(); onToast("Projeto criado!", "success");
+    } catch (e) { onToast("Erro ao salvar.", "error"); }
+    setSaving(false);
+  };
+
+  const saveCasa = async () => {
+    setSaving(true);
+    try {
+      await supa("casas", { method: "POST", body: JSON.stringify({ name: form.name, deal_type: form.deal_type || "cpa", cpa_value: parseFloat(form.cpa_value) || null, cpa_currency: form.cpa_currency || "USD", revshare_pct: parseFloat(form.revshare_pct) || null }) });
+      await load(); onRefresh(); closeModal(); onToast("Casa cadastrada!", "success");
+    } catch (e) { onToast("Erro ao salvar.", "error"); }
+    setSaving(false);
+  };
+
+  const saveCost = async () => {
+    setSaving(true);
+    try {
+      await supa("costs", { method: "POST", body: JSON.stringify({ description: form.description, category: form.category, amount: parseFloat(form.amount), currency: form.currency || "BRL", recurrence: form.recurrence || "monthly", start_date: form.start_date || today(), is_active: true }) });
+      await load(); closeModal(); onToast("Custo cadastrado!", "success");
+    } catch (e) { onToast("Erro ao salvar.", "error"); }
+    setSaving(false);
+  };
+
+  const saveUSD = async () => {
+    setSaving(true);
+    try {
+      await supa("settings?key=eq.usd_rate", { method: "PATCH", body: JSON.stringify({ value: String(form.usd_rate) }) });
+      await load(); onRefresh(); closeModal(); onToast("Câmbio atualizado!", "success");
+    } catch (e) { onToast("Erro ao salvar.", "error"); }
+    setSaving(false);
+  };
+
+  const toggleCost = async (id, current) => {
+    try {
+      await supa(`costs?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ is_active: !current }) });
+      await load();
+    } catch (e) { console.error(e); }
+  };
+
+  if (loading) return <div className="loading"><div className="spinner" /> Carregando...</div>;
+
+  return (
+    <div>
+      <div className="section-title">Configurações</div>
+
+      {/* CÂMBIO */}
+      <div className="config-grid">
+        <div className="config-card">
+          <div className="config-card-header">
+            <div className="config-card-title">💱 Câmbio USD</div>
+            <button className="btn-sm" onClick={() => openModal("usd", { usd_rate: settings.usd_rate || "5.00" })}>Editar</button>
+          </div>
+          <div className="config-item">
+            <span className="config-item-label">1 USD =</span>
+            <span style={{ fontFamily: "var(--mono)", fontWeight: 600 }}>R$ {settings.usd_rate || "5.00"}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* PROJETOS */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>📁 Projetos</div>
+        <button className="btn-sm" onClick={() => openModal("project", { deal_type: "cpa", cpa_currency: "USD" })}>+ Novo</button>
+      </div>
+      <div className="config-grid" style={{ marginBottom: 24 }}>
+        {projects.map((p) => (
+          <div key={p.id} className="config-card">
+            <div className="config-card-title" style={{ marginBottom: 10 }}>{p.name}</div>
+            <div className="config-item"><span className="config-item-label">Expert</span><span>{p.experts?.name || "—"}</span></div>
+            <div className="config-item"><span className="config-item-label">Status</span><span className={`badge ${p.status === "active" ? "badge-green" : "badge-red"}`}>{p.status}</span></div>
+          </div>
+        ))}
+        {projects.length === 0 && <div className="empty" style={{ gridColumn: "1/-1" }}>Nenhum projeto cadastrado.</div>}
+      </div>
+
+      {/* CASAS */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>🏠 Casas de Apostas</div>
+        <button className="btn-sm" onClick={() => openModal("casa", { deal_type: "cpa", cpa_currency: "USD" })}>+ Nova</button>
+      </div>
+      <div className="config-grid" style={{ marginBottom: 24 }}>
+        {casas.map((c) => (
+          <div key={c.id} className="config-card">
+            <div className="config-card-title" style={{ marginBottom: 10 }}>{c.name}</div>
+            <div className="config-item"><span className="config-item-label">Modelo</span><span className="badge badge-purple">{c.deal_type.toUpperCase()}</span></div>
+            {c.cpa_value && <div className="config-item"><span className="config-item-label">CPA</span><span style={{ fontFamily: "var(--mono)" }}>{c.cpa_currency} {c.cpa_value}</span></div>}
+            {c.revshare_pct && <div className="config-item"><span className="config-item-label">RevShare</span><span style={{ fontFamily: "var(--mono)" }}>{c.revshare_pct}%</span></div>}
+          </div>
+        ))}
+        {casas.length === 0 && <div className="empty" style={{ gridColumn: "1/-1" }}>Nenhuma casa cadastrada.</div>}
+      </div>
+
+      {/* CUSTOS */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>💸 Custos Empresariais</div>
+        <button className="btn-sm" onClick={() => openModal("cost", { currency: "BRL", recurrence: "monthly", start_date: today() })}>+ Novo</button>
+      </div>
+      <div className="table-card" style={{ marginBottom: 24 }}>
+        {costs.length === 0 ? (
+          <div className="empty"><div className="empty-icon">💸</div>Nenhum custo cadastrado.</div>
+        ) : (
+          <table>
+            <thead><tr><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Periodicidade</th><th>Status</th></tr></thead>
+            <tbody>
+              {costs.map((c) => (
+                <tr key={c.id}>
+                  <td>{c.description}</td>
+                  <td style={{ color: "var(--text3)" }}>{c.category || "—"}</td>
+                  <td style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{c.currency} {c.amount}</td>
+                  <td><span className="badge badge-amber">{c.recurrence}</span></td>
+                  <td>
+                    <button className={`badge ${c.is_active ? "badge-green" : "badge-red"}`} style={{ border: "none", cursor: "pointer" }} onClick={() => toggleCost(c.id, c.is_active)}>
+                      {c.is_active ? "Ativo" : "Inativo"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* MODALS */}
+      {modal === "usd" && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className="modal">
+            <div className="modal-title">Configurar Câmbio</div>
+            <div className="field"><label>1 USD = R$</label><input className="ctrl-input" style={{ width: "100%" }} type="number" step="0.01" value={form.usd_rate} onChange={(e) => setForm({ ...form, usd_rate: e.target.value })} /></div>
+            <div className="modal-actions"><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={saveUSD} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</button></div>
+          </div>
+        </div>
+      )}
+
+      {modal === "project" && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className="modal">
+            <div className="modal-title">Novo Projeto</div>
+            <div className="modal-grid full">
+              <div className="field"><label>Nome do Projeto</label><input className="ctrl-input" style={{ width: "100%" }} value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="field"><label>Nome do Expert</label><input className="ctrl-input" style={{ width: "100%" }} placeholder="Ex: Laura, Hector" value={form.expert_name || ""} onChange={(e) => setForm({ ...form, expert_name: e.target.value })} /></div>
+            </div>
+            <div className="modal-actions"><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={saveProject} disabled={saving}>{saving ? "Salvando..." : "Criar"}</button></div>
+          </div>
+        </div>
+      )}
+
+      {modal === "casa" && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className="modal">
+            <div className="modal-title">Nova Casa de Apostas</div>
+            <div className="modal-grid">
+              <div className="field"><label>Nome</label><input className="ctrl-input" style={{ width: "100%" }} value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="field"><label>Modelo</label>
+                <select className="ctrl-select" style={{ width: "100%" }} value={form.deal_type} onChange={(e) => setForm({ ...form, deal_type: e.target.value })}>
+                  <option value="cpa">CPA</option><option value="revshare">RevShare</option><option value="hybrid">Híbrido</option>
+                </select>
+              </div>
+              {(form.deal_type === "cpa" || form.deal_type === "hybrid") && <>
+                <div className="field"><label>Valor CPA</label><input className="ctrl-input" style={{ width: "100%" }} type="number" value={form.cpa_value || ""} onChange={(e) => setForm({ ...form, cpa_value: e.target.value })} /></div>
+                <div className="field"><label>Moeda</label>
+                  <select className="ctrl-select" style={{ width: "100%" }} value={form.cpa_currency} onChange={(e) => setForm({ ...form, cpa_currency: e.target.value })}>
+                    <option value="USD">USD</option><option value="BRL">BRL</option>
+                  </select>
+                </div>
+              </>}
+              {(form.deal_type === "revshare" || form.deal_type === "hybrid") && (
+                <div className="field"><label>RevShare %</label><input className="ctrl-input" style={{ width: "100%" }} type="number" value={form.revshare_pct || ""} onChange={(e) => setForm({ ...form, revshare_pct: e.target.value })} /></div>
+              )}
+            </div>
+            <div className="modal-actions"><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={saveCasa} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</button></div>
+          </div>
+        </div>
+      )}
+
+      {modal === "cost" && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className="modal">
+            <div className="modal-title">Novo Custo</div>
+            <div className="modal-grid">
+              <div className="field"><label>Descrição</label><input className="ctrl-input" style={{ width: "100%" }} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="field"><label>Categoria</label><input className="ctrl-input" style={{ width: "100%" }} placeholder="Ex: Software, Equipe" value={form.category || ""} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+              <div className="field"><label>Valor</label><input className="ctrl-input" style={{ width: "100%" }} type="number" value={form.amount || ""} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
+              <div className="field"><label>Moeda</label>
+                <select className="ctrl-select" style={{ width: "100%" }} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
+                  <option value="BRL">BRL</option><option value="USD">USD</option>
+                </select>
+              </div>
+              <div className="field"><label>Periodicidade</label>
+                <select className="ctrl-select" style={{ width: "100%" }} value={form.recurrence} onChange={(e) => setForm({ ...form, recurrence: e.target.value })}>
+                  <option value="once">Único</option><option value="daily">Diário</option><option value="weekly">Semanal</option><option value="monthly">Mensal</option><option value="annual">Anual</option>
+                </select>
+              </div>
+              <div className="field"><label>Início</label><input className="ctrl-input" style={{ width: "100%" }} type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
+            </div>
+            <div className="modal-actions"><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={saveCost} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</button></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── APP SHELL ────────────────────────────────────────────────────────────────
+const NAV = [
+  { id: "dashboard", label: "Dashboard", icon: "📊", section: "principal" },
+  { id: "ftds", label: "FTDs", icon: "✅", section: "operações" },
+  { id: "config", label: "Configurações", icon: "⚙️", section: "sistema" },
+];
+
+export default function App() {
+  const [authed, setAuthed] = useState(() => !!localStorage.getItem("dash_auth"));
+  const [page, setPage] = useState("dashboard");
+  const [currency, setCurrency] = useState("BRL");
+  const [rate, setRate] = useState(5);
+  const [dateFrom, setDateFrom] = useState(monthStart());
+  const [dateTo, setDateTo] = useState(today());
+  const [projectFilter, setProjectFilter] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [casas, setCasas] = useState([]);
+  const [toast, setToast] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadMeta = useCallback(async () => {
+    try {
+      const [p, c, s] = await Promise.all([
+        supa("projects?select=*"),
+        supa("casas?select=*"),
+        supa("settings?select=*"),
+      ]);
+      setProjects(p); setCasas(c);
+      const usd = s.find((x) => x.key === "usd_rate");
+      if (usd) setRate(parseFloat(usd.value));
+    } catch (e) { console.error(e); }
+  }, []);
+
+  useEffect(() => { if (authed) loadMeta(); }, [authed, refreshKey]);
+
+  const showToast = (msg, type = "success") => setToast({ msg, type });
+
+  if (!authed) return (
+    <>
+      <style>{css}</style>
+      <Login onLogin={() => setAuthed(true)} />
+    </>
+  );
+
+  const sections = [...new Set(NAV.map((n) => n.section))];
+
+  return (
+    <>
+      <style>{css}</style>
+      <div className="app">
+        {/* SIDEBAR */}
+        <aside className="sidebar">
+          <div className="sidebar-logo">Bryan<span>HQ</span></div>
+          <nav className="sidebar-nav">
+            {sections.map((sec) => (
+              <div key={sec} className="nav-section">
+                <div className="nav-label">{sec}</div>
+                {NAV.filter((n) => n.section === sec).map((n) => (
+                  <button key={n.id} className={`nav-item ${page === n.id ? "active" : ""}`} onClick={() => setPage(n.id)}>
+                    <span className="nav-icon">{n.icon}</span>
+                    {n.label}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </nav>
+          <div className="sidebar-footer">
+            <button className="btn-logout" onClick={() => { localStorage.removeItem("dash_auth"); setAuthed(false); }}>
+              🚪 Sair
+            </button>
+          </div>
+        </aside>
+
+        {/* MAIN */}
+        <main className="main">
+          <div className="topbar">
+            <div className="topbar-title">
+              {NAV.find((n) => n.id === page)?.icon} {NAV.find((n) => n.id === page)?.label}
+            </div>
+            {page === "dashboard" && (
+              <div className="topbar-controls">
+                <select className="ctrl-select" value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
+                  <option value="">Todos os projetos</option>
+                  {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <input className="ctrl-input" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                <input className="ctrl-input" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                <select className="ctrl-select" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                  <option value="BRL">R$ BRL</option>
+                  <option value="USD">$ USD</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {page === "dashboard" && (
+            <Dashboard
+              key={`${dateFrom}-${dateTo}-${projectFilter}-${currency}-${rate}-${refreshKey}`}
+              currency={currency} rate={rate}
+              dateFrom={dateFrom} dateTo={dateTo}
+              projectFilter={projectFilter}
+            />
+          )}
+          {page === "ftds" && <FTDsPage projects={projects} casas={casas} onToast={showToast} />}
+          {page === "config" && <ConfigPage onToast={showToast} onRefresh={() => setRefreshKey((k) => k + 1)} />}
+        </main>
+      </div>
+
+      {toast && <Toast msg={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
+    </>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+  </script>
+</body>
+</html>
