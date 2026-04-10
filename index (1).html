@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang='pt-BR'>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BryanHQ — Dashboard</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <title>BryanHQ</title>
+  <script crossorigin src='https://unpkg.com/react@18/umd/react.development.js'></script>
+  <script crossorigin src='https://unpkg.com/react-dom@18/umd/react-dom.development.js'></script>
+  <script src='https://unpkg.com/@babel/standalone@7.23.2/babel.js'></script>
 </head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel">
+<body style='margin:0;padding:0;background:#0a0a0f'>
+  <div id='root'></div>
+  <script type='text/babel'>
 const { useState, useEffect, useCallback } = React;
 
 
 // ─── CONFIG SUPABASE ───────────────────────────────────────────────────────────
-const SUPA_URL = "https://ecxpbpzkuscgkyozrqaw.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjeHBicHprdXNjZ2t5b3pycWF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MjAwOTEsImV4cCI6MjA5MTM5NjA5MX0.MdPrSmEEN-9xaSrPbx4LYB2II_jQUuAjWrIVhkr72v0";
+const SUPA_URL = 'https://ecxpbpzkuscgkyozrqaw.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjeHBicHprdXNjZ2t5b3pycWF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MjAwOTEsImV4cCI6MjA5MTM5NjA5MX0.MdPrSmEEN-9xaSrPbx4LYB2II_jQUuAjWrIVhkr72v0';
 
 const supa = async (path, opts = {}) => {
   const { prefer, headers: extraHeaders, ...restOpts } = opts;
@@ -24,8 +24,8 @@ const supa = async (path, opts = {}) => {
     headers: {
       apikey: SUPA_KEY,
       Authorization: `Bearer ${SUPA_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: prefer || "return=representation",
+      'Content-Type': 'application/json',
+      Prefer: prefer || 'return=representation',
       ...extraHeaders,
     },
     ...restOpts,
@@ -39,21 +39,21 @@ const supa = async (path, opts = {}) => {
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
-const fmt = (val, currency = "BRL", rate = 5) => {
-  const v = currency === "USD" ? val / rate : val;
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
+const fmt = (val, currency = 'BRL', rate = 5) => {
+  const v = currency === 'USD' ? val / rate : val;
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
     currency,
     minimumFractionDigits: 2,
   }).format(v || 0);
 };
 
-const fmtN = (n) => new Intl.NumberFormat("pt-BR").format(n || 0);
+const fmtN = (n) => new Intl.NumberFormat('pt-BR').format(n || 0);
 
-const today = () => new Date().toISOString().split("T")[0];
+const today = () => new Date().toISOString().split('T')[0];
 const monthStart = () => {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 };
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
@@ -524,23 +524,23 @@ function MiniBarChart({ data, color }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
     <div>
-      <div className="mini-bars">
+      <div className='mini-bars'>
         {data.map((d, i) => (
           <div
             key={i}
-            className="mini-bar"
+            className='mini-bar'
             style={{
               height: `${Math.max((d.value / max) * 100, 4)}%`,
-              background: color || "var(--accent)",
+              background: color || 'var(--accent)',
               opacity: 0.7 + (i / data.length) * 0.3,
             }}
             title={`${d.label}: ${d.value}`}
           />
         ))}
       </div>
-      <div className="chart-labels">
+      <div className='chart-labels'>
         {data.map((d, i) => (
-          <div key={i} className="chart-label">{d.label}</div>
+          <div key={i} className='chart-label'>{d.label}</div>
         ))}
       </div>
     </div>
@@ -562,22 +562,22 @@ function DonutChart({ segments }) {
     const y1 = cy + r * Math.sin(start);
     const x2 = cx + r * Math.cos(end);
     const y2 = cy + r * Math.sin(end);
-    return { ...seg, d: pct === 0 ? "" : `M${cx},${cy} L${x1},${y1} A${r},${r},0,${laf},1,${x2},${y2} Z`, pct };
+    return { ...seg, d: pct === 0 ? '' : `M${cx},${cy} L${x1},${y1} A${r},${r},0,${laf},1,${x2},${y2} Z`, pct };
   });
   return (
-    <div className="donut-wrap">
-      <svg viewBox="0 0 100 100" style={{ width: 90, height: 90, flexShrink: 0 }}>
+    <div className='donut-wrap'>
+      <svg viewBox='0 0 100 100' style={{ width: 90, height: 90, flexShrink: 0 }}>
         {paths.map((p, i) => p.d && <path key={i} d={p.d} fill={p.color} opacity={0.85} />)}
-        <circle cx={cx} cy={cy} r={28} fill="var(--bg2)" />
-        <text x={cx} y={cy - 5} textAnchor="middle" fill="var(--text)" fontSize="10" fontWeight="700" fontFamily="Syne, sans-serif">{total}</text>
-        <text x={cx} y={cy + 8} textAnchor="middle" fill="var(--text3)" fontSize="7" fontFamily="Syne, sans-serif">total</text>
+        <circle cx={cx} cy={cy} r={28} fill='var(--bg2)' />
+        <text x={cx} y={cy - 5} textAnchor='middle' fill='var(--text)' fontSize='10' fontWeight='700' fontFamily='Syne, sans-serif'>{total}</text>
+        <text x={cx} y={cy + 8} textAnchor='middle' fill='var(--text3)' fontSize='7' fontFamily='Syne, sans-serif'>total</text>
       </svg>
-      <div className="donut-legend">
+      <div className='donut-legend'>
         {paths.map((p, i) => (
-          <div key={i} className="legend-item">
-            <div className="legend-dot" style={{ background: p.color }} />
-            <span style={{ color: "var(--text2)" }}>{p.label}</span>
-            <span style={{ marginLeft: "auto", color: "var(--text)", fontWeight: 600 }}>{fmtN(p.value)}</span>
+          <div key={i} className='legend-item'>
+            <div className='legend-dot' style={{ background: p.color }} />
+            <span style={{ color: 'var(--text2)' }}>{p.label}</span>
+            <span style={{ marginLeft: 'auto', color: 'var(--text)', fontWeight: 600 }}>{fmtN(p.value)}</span>
           </div>
         ))}
       </div>
@@ -595,47 +595,47 @@ function Toast({ msg, type, onDone }) {
 }
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
-const ADMIN_USER = "bryan";
-const ADMIN_PASS = "Bryan@2025";
+const ADMIN_USER = 'bryan';
+const ADMIN_PASS = 'Bryan@2025';
 
 function Login({ onLogin }) {
-  const [user, setUser] = useState("");
-  const [pass, setPass] = useState("");
-  const [err, setErr] = useState("");
+  const [user, setUser] = useState('');
+  const [pass, setPass] = useState('');
+  const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
 
   const submit = () => {
     setLoading(true);
-    setErr("");
+    setErr('');
     setTimeout(() => {
       if (user === ADMIN_USER && pass === ADMIN_PASS) {
-        localStorage.setItem("dash_auth", "1");
+        localStorage.setItem('dash_auth', '1');
         onLogin();
       } else {
-        setErr("Usuário ou senha incorretos.");
+        setErr('Usuário ou senha incorretos.');
       }
       setLoading(false);
     }, 600);
   };
 
   return (
-    <div className="login-wrap">
-      <div className="login-bg" />
-      <div className="login-card">
-        <div className="login-logo">Bryan<span>HQ</span></div>
-        <div className="login-sub">Painel de controle empresarial</div>
-        <div className="field">
+    <div className='login-wrap'>
+      <div className='login-bg' />
+      <div className='login-card'>
+        <div className='login-logo'>Bryan<span>HQ</span></div>
+        <div className='login-sub'>Painel de controle empresarial</div>
+        <div className='field'>
           <label>Usuário</label>
-          <input value={user} onChange={(e) => setUser(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          <input value={user} onChange={(e) => setUser(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} />
         </div>
-        <div className="field">
+        <div className='field'>
           <label>Senha</label>
-          <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} />
+          <input type='password' value={pass} onChange={(e) => setPass(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} />
         </div>
-        <button className="btn-primary" onClick={submit} disabled={loading}>
-          {loading ? "Entrando..." : "Entrar"}
+        <button className='btn-primary' onClick={submit} disabled={loading}>
+          {loading ? 'Entrando...' : 'Entrar'}
         </button>
-        {err && <div className="err-msg">{err}</div>}
+        {err && <div className='err-msg'>{err}</div>}
       </div>
     </div>
   );
@@ -650,11 +650,11 @@ function Dashboard({ currency, rate, dateFrom, dateTo, projectFilter }) {
     setLoading(true);
     try {
       const [ftds, costs, spend, hotmart, leads] = await Promise.all([
-        supa(`ftds?ftd_date=gte.${dateFrom}&ftd_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ""}&select=*`),
+        supa(`ftds?ftd_date=gte.${dateFrom}&ftd_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ''}&select=*`),
         supa(`costs?select=*`),
-        supa(`ad_spend?spend_date=gte.${dateFrom}&spend_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ""}&select=*`),
-        supa(`hotmart_sales?sale_date=gte.${dateFrom}&sale_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ""}&select=*`),
-        supa(`leads_cache?lead_date=gte.${dateFrom}&lead_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ""}&select=*`),
+        supa(`ad_spend?spend_date=gte.${dateFrom}&spend_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ''}&select=*`),
+        supa(`hotmart_sales?sale_date=gte.${dateFrom}&sale_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ''}&select=*`),
+        supa(`leads_cache?lead_date=gte.${dateFrom}&lead_date=lte.${dateTo}${projectFilter ? `&project_id=eq.${projectFilter}` : ''}&select=*`),
       ]);
 
       const totalFTDs = ftds.length;
@@ -663,19 +663,19 @@ function Dashboard({ currency, rate, dateFrom, dateTo, projectFilter }) {
 
       const totalCPA = ftds.reduce((s, f) => {
         const v = f.cpa_value || 0;
-        return s + (f.cpa_currency === "USD" ? v * rate : v);
+        return s + (f.cpa_currency === 'USD' ? v * rate : v);
       }, 0);
 
       const totalRevShare = 0;
       const totalHotmart = hotmart.reduce((s, h) => {
         const v = h.amount || 0;
-        return s + (h.currency === "USD" ? v * rate : v);
+        return s + (h.currency === 'USD' ? v * rate : v);
       }, 0);
       const faturamento = totalCPA + totalRevShare + totalHotmart;
 
       const totalSpend = spend.reduce((s, a) => {
         const v = a.amount || 0;
-        return s + (a.currency === "USD" ? v * rate : v);
+        return s + (a.currency === 'USD' ? v * rate : v);
       }, 0);
 
       const now = new Date();
@@ -684,12 +684,12 @@ function Dashboard({ currency, rate, dateFrom, dateTo, projectFilter }) {
       const activeCosts = costs.filter((c) => c.is_active);
       const costsInPeriod = activeCosts.reduce((s, c) => {
         let monthly = c.amount;
-        if (c.recurrence === "annual") monthly = c.amount / 12;
-        if (c.recurrence === "once") monthly = c.amount;
-        if (c.recurrence === "daily") monthly = c.amount * 30;
+        if (c.recurrence === 'annual') monthly = c.amount / 12;
+        if (c.recurrence === 'once') monthly = c.amount;
+        if (c.recurrence === 'daily') monthly = c.amount * 30;
         const daily = monthly / 30;
         const v = daily * diffDays;
-        return s + (c.currency === "USD" ? v * rate : v);
+        return s + (c.currency === 'USD' ? v * rate : v);
       }, 0);
 
       const totalCosts = totalSpend + costsInPeriod;
@@ -706,14 +706,14 @@ function Dashboard({ currency, rate, dateFrom, dateTo, projectFilter }) {
       });
       const spendByDay = {};
       spend.forEach((s) => {
-        spendByDay[s.spend_date] = (spendByDay[s.spend_date] || 0) + (s.currency === "USD" ? s.amount * rate : s.amount);
+        spendByDay[s.spend_date] = (spendByDay[s.spend_date] || 0) + (s.currency === 'USD' ? s.amount * rate : s.amount);
       });
 
       const days = [];
       const d = new Date(dateFrom);
       const end = new Date(dateTo);
       while (d <= end && days.length < 30) {
-        const key = d.toISOString().split("T")[0];
+        const key = d.toISOString().split('T')[0];
         days.push({ label: key.slice(5), ftd: byDay[key] || 0, spend: spendByDay[key] || 0 });
         d.setDate(d.getDate() + 1);
       }
@@ -725,9 +725,9 @@ function Dashboard({ currency, rate, dateFrom, dateTo, projectFilter }) {
         ftdsChart: days,
         spendChart: days,
         donut: [
-          { label: "CPA", value: Math.round(totalCPA / rate), color: "var(--accent)" },
-          { label: "Hotmart", value: Math.round(totalHotmart), color: "var(--green)" },
-          { label: "RevShare", value: Math.round(totalRevShare / rate), color: "var(--blue)" },
+          { label: 'CPA', value: Math.round(totalCPA / rate), color: 'var(--accent)' },
+          { label: 'Hotmart', value: Math.round(totalHotmart), color: 'var(--green)' },
+          { label: 'RevShare', value: Math.round(totalRevShare / rate), color: 'var(--blue)' },
         ].filter((d) => d.value > 0),
       });
     } catch (e) {
@@ -738,51 +738,51 @@ function Dashboard({ currency, rate, dateFrom, dateTo, projectFilter }) {
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading) return <div className="loading"><div className="spinner" /> Carregando dados...</div>;
-  if (!data) return <div className="empty">Erro ao carregar dados.</div>;
+  if (loading) return <div className='loading'><div className='spinner' /> Carregando dados...</div>;
+  if (!data) return <div className='empty'>Erro ao carregar dados.</div>;
 
   const c = currency;
 
   const cards = [
-    { label: "Leads no Funil", value: fmtN(data.totalLeads), sub: "total do período", color: "#4facfe", icon: "👥" },
-    { label: "Investimento", value: fmt(data.totalSpend, c, rate), sub: "Meta Ads", color: "var(--red)", icon: "📢" },
-    { label: "FTDs Confirmados", value: fmtN(data.totalFTDs), sub: `${data.ftdsManual} manual · ${data.ftdsAI} IA`, color: "var(--green)", icon: "✅" },
-    { label: "Faturamento Total", value: fmt(data.faturamento, c, rate), sub: "CPA + Hotmart + RevShare", color: "var(--accent2)", icon: "💰" },
-    { label: "Lucro Líquido", value: fmt(data.lucro, c, rate), sub: "após todos os custos", color: data.lucro >= 0 ? "var(--green)" : "var(--red)", icon: "📈" },
-    { label: "ROI", value: `${data.roi}%`, sub: "retorno sobre investimento", color: data.roi >= 0 ? "var(--green)" : "var(--red)", icon: "🎯" },
-    { label: "Conv. Lead → FTD", value: `${data.convRate}%`, sub: "taxa de conversão", color: "var(--amber)", icon: "⚡" },
-    { label: "Custo por Lead", value: fmt(data.cpl, c, rate), sub: "CPL médio", color: "#4facfe", icon: "📊" },
-    { label: "Fat. Infoproduto", value: fmt(data.totalHotmart, c, rate), sub: "Hotmart", color: "var(--green)", icon: "🛒" },
-    { label: "Custos Fixos", value: fmt(data.costsInPeriod, c, rate), sub: "no período", color: "var(--red)", icon: "🏢" },
+    { label: 'Leads no Funil', value: fmtN(data.totalLeads), sub: 'total do período', color: '#4facfe', icon: '👥' },
+    { label: 'Investimento', value: fmt(data.totalSpend, c, rate), sub: 'Meta Ads', color: 'var(--red)', icon: '📢' },
+    { label: 'FTDs Confirmados', value: fmtN(data.totalFTDs), sub: `${data.ftdsManual} manual · ${data.ftdsAI} IA`, color: 'var(--green)', icon: '✅' },
+    { label: 'Faturamento Total', value: fmt(data.faturamento, c, rate), sub: 'CPA + Hotmart + RevShare', color: 'var(--accent2)', icon: '💰' },
+    { label: 'Lucro Líquido', value: fmt(data.lucro, c, rate), sub: 'após todos os custos', color: data.lucro >= 0 ? 'var(--green)' : 'var(--red)', icon: '📈' },
+    { label: 'ROI', value: `${data.roi}%`, sub: 'retorno sobre investimento', color: data.roi >= 0 ? 'var(--green)' : 'var(--red)', icon: '🎯' },
+    { label: 'Conv. Lead → FTD', value: `${data.convRate}%`, sub: 'taxa de conversão', color: 'var(--amber)', icon: '⚡' },
+    { label: 'Custo por Lead', value: fmt(data.cpl, c, rate), sub: 'CPL médio', color: '#4facfe', icon: '📊' },
+    { label: 'Fat. Infoproduto', value: fmt(data.totalHotmart, c, rate), sub: 'Hotmart', color: 'var(--green)', icon: '🛒' },
+    { label: 'Custos Fixos', value: fmt(data.costsInPeriod, c, rate), sub: 'no período', color: 'var(--red)', icon: '🏢' },
   ];
 
   return (
     <div>
-      <div className="cards-grid">
+      <div className='cards-grid'>
         {cards.map((card, i) => (
-          <div key={i} className="card">
-            <div className="card-accent-line" style={{ background: card.color }} />
-            <div className="card-label">{card.label}</div>
-            <div className="card-value" style={{ color: card.color }}>{card.value}</div>
-            <div className="card-sub">{card.sub}</div>
+          <div key={i} className='card'>
+            <div className='card-accent-line' style={{ background: card.color }} />
+            <div className='card-label'>{card.label}</div>
+            <div className='card-value' style={{ color: card.color }}>{card.value}</div>
+            <div className='card-sub'>{card.sub}</div>
           </div>
         ))}
       </div>
 
-      <div className="charts-row">
-        <div className="chart-card">
-          <div className="chart-title">FTDs por dia</div>
-          <MiniBarChart data={data.ftdsChart.map((d) => ({ label: d.label, value: d.ftd }))} color="var(--green)" />
+      <div className='charts-row'>
+        <div className='chart-card'>
+          <div className='chart-title'>FTDs por dia</div>
+          <MiniBarChart data={data.ftdsChart.map((d) => ({ label: d.label, value: d.ftd }))} color='var(--green)' />
         </div>
-        <div className="chart-card">
-          <div className="chart-title">Investimento por dia (R$)</div>
-          <MiniBarChart data={data.spendChart.map((d) => ({ label: d.label, value: Math.round(d.spend) }))} color="var(--red)" />
+        <div className='chart-card'>
+          <div className='chart-title'>Investimento por dia (R$)</div>
+          <MiniBarChart data={data.spendChart.map((d) => ({ label: d.label, value: Math.round(d.spend) }))} color='var(--red)' />
         </div>
       </div>
 
       {data.donut.length > 0 && (
-        <div className="chart-card" style={{ marginBottom: 24 }}>
-          <div className="chart-title">Composição do Faturamento</div>
+        <div className='chart-card' style={{ marginBottom: 24 }}>
+          <div className='chart-title'>Composição do Faturamento</div>
           <DonutChart segments={data.donut} />
         </div>
       )}
@@ -793,13 +793,13 @@ function Dashboard({ currency, rate, dateFrom, dateTo, projectFilter }) {
 // ─── FTD MODAL ────────────────────────────────────────────────────────────────
 function FTDModal({ onClose, onSaved, projects, casas }) {
   const [form, setForm] = useState({
-    project_id: projects[0]?.id || "",
-    casa_id: casas[0]?.id || "",
+    project_id: projects[0]?.id || '',
+    casa_id: casas[0]?.id || '',
     ftd_date: today(),
     is_ai_detected: false,
-    cpa_value: "",
-    cpa_currency: "USD",
-    notes: "",
+    cpa_value: '',
+    cpa_currency: 'USD',
+    notes: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -808,8 +808,8 @@ function FTDModal({ onClose, onSaved, projects, casas }) {
   const save = async () => {
     setSaving(true);
     try {
-      await supa("ftds", {
-        method: "POST",
+      await supa('ftds', {
+        method: 'POST',
         body: JSON.stringify({ ...form, cpa_value: parseFloat(form.cpa_value) || null }),
       });
       onSaved();
@@ -818,55 +818,55 @@ function FTDModal({ onClose, onSaved, projects, casas }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
-        <div className="modal-title">Lançar FTD</div>
-        <div className="modal-grid">
-          <div className="field">
+    <div className='modal-overlay' onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className='modal'>
+        <div className='modal-title'>Lançar FTD</div>
+        <div className='modal-grid'>
+          <div className='field'>
             <label>Projeto</label>
-            <select className="ctrl-select" style={{ width: "100%" }} value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })}>
+            <select className='ctrl-select' style={{ width: '100%' }} value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })}>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="field">
+          <div className='field'>
             <label>Casa</label>
-            <select className="ctrl-select" style={{ width: "100%" }} value={form.casa_id} onChange={(e) => {
+            <select className='ctrl-select' style={{ width: '100%' }} value={form.casa_id} onChange={(e) => {
               const c = casas.find((x) => x.id === e.target.value);
-              setForm({ ...form, casa_id: e.target.value, cpa_value: c?.cpa_value || "" });
+              setForm({ ...form, casa_id: e.target.value, cpa_value: c?.cpa_value || '' });
             }}>
               {casas.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          <div className="field">
+          <div className='field'>
             <label>Data</label>
-            <input className="ctrl-input" style={{ width: "100%" }} type="date" value={form.ftd_date} onChange={(e) => setForm({ ...form, ftd_date: e.target.value })} />
+            <input className='ctrl-input' style={{ width: '100%' }} type='date' value={form.ftd_date} onChange={(e) => setForm({ ...form, ftd_date: e.target.value })} />
           </div>
-          <div className="field">
+          <div className='field'>
             <label>Tipo</label>
-            <select className="ctrl-select" style={{ width: "100%" }} value={form.is_ai_detected ? "ai" : "manual"} onChange={(e) => setForm({ ...form, is_ai_detected: e.target.value === "ai" })}>
-              <option value="manual">Manual</option>
-              <option value="ai">Via IA</option>
+            <select className='ctrl-select' style={{ width: '100%' }} value={form.is_ai_detected ? 'ai' : 'manual'} onChange={(e) => setForm({ ...form, is_ai_detected: e.target.value === 'ai' })}>
+              <option value='manual'>Manual</option>
+              <option value='ai'>Via IA</option>
             </select>
           </div>
-          <div className="field">
+          <div className='field'>
             <label>Valor CPA</label>
-            <input className="ctrl-input" style={{ width: "100%" }} type="number" placeholder={selectedCasa?.cpa_value || "0"} value={form.cpa_value} onChange={(e) => setForm({ ...form, cpa_value: e.target.value })} />
+            <input className='ctrl-input' style={{ width: '100%' }} type='number' placeholder={selectedCasa?.cpa_value || '0'} value={form.cpa_value} onChange={(e) => setForm({ ...form, cpa_value: e.target.value })} />
           </div>
-          <div className="field">
+          <div className='field'>
             <label>Moeda CPA</label>
-            <select className="ctrl-select" style={{ width: "100%" }} value={form.cpa_currency} onChange={(e) => setForm({ ...form, cpa_currency: e.target.value })}>
-              <option value="USD">USD</option>
-              <option value="BRL">BRL</option>
+            <select className='ctrl-select' style={{ width: '100%' }} value={form.cpa_currency} onChange={(e) => setForm({ ...form, cpa_currency: e.target.value })}>
+              <option value='USD'>USD</option>
+              <option value='BRL'>BRL</option>
             </select>
           </div>
         </div>
-        <div className="field" style={{ marginTop: 14 }}>
+        <div className='field' style={{ marginTop: 14 }}>
           <label>Observações</label>
-          <input className="ctrl-input" style={{ width: "100%" }} placeholder="Opcional" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          <input className='ctrl-input' style={{ width: '100%' }} placeholder='Opcional' value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
         </div>
-        <div className="modal-actions">
-          <button className="btn-cancel" onClick={onClose}>Cancelar</button>
-          <button className="btn-save" onClick={save} disabled={saving}>{saving ? "Salvando..." : "Lançar FTD"}</button>
+        <div className='modal-actions'>
+          <button className='btn-cancel' onClick={onClose}>Cancelar</button>
+          <button className='btn-save' onClick={save} disabled={saving}>{saving ? 'Salvando...' : 'Lançar FTD'}</button>
         </div>
       </div>
     </div>
@@ -882,7 +882,7 @@ function FTDsPage({ projects, casas, onToast }) {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await supa("ftds?select=*,projects(name),casas(name)&order=ftd_date.desc&limit=100");
+      const data = await supa('ftds?select=*,projects(name),casas(name)&order=ftd_date.desc&limit=100');
       setFtds(data);
     } catch (e) { console.error(e); }
     setLoading(false);
@@ -896,18 +896,18 @@ function FTDsPage({ projects, casas, onToast }) {
         <FTDModal
           projects={projects} casas={casas}
           onClose={() => setShowModal(false)}
-          onSaved={() => { setShowModal(false); load(); onToast("FTD lançado!", "success"); }}
+          onSaved={() => { setShowModal(false); load(); onToast('FTD lançado!', 'success'); }}
         />
       )}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div className="section-title">Lançamentos de FTD</div>
-        <button className="btn-accent" onClick={() => setShowModal(true)}>+ Lançar FTD</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div className='section-title'>Lançamentos de FTD</div>
+        <button className='btn-accent' onClick={() => setShowModal(true)}>+ Lançar FTD</button>
       </div>
-      <div className="table-card">
+      <div className='table-card'>
         {loading ? (
-          <div className="loading"><div className="spinner" /> Carregando...</div>
+          <div className='loading'><div className='spinner' /> Carregando...</div>
         ) : ftds.length === 0 ? (
-          <div className="empty"><div className="empty-icon">📋</div>Nenhum FTD lançado ainda.</div>
+          <div className='empty'><div className='empty-icon'>📋</div>Nenhum FTD lançado ainda.</div>
         ) : (
           <table>
             <thead>
@@ -923,18 +923,18 @@ function FTDsPage({ projects, casas, onToast }) {
             <tbody>
               {ftds.map((f) => (
                 <tr key={f.id}>
-                  <td style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{f.ftd_date}</td>
-                  <td>{f.projects?.name || "—"}</td>
-                  <td>{f.casas?.name || "—"}</td>
+                  <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{f.ftd_date}</td>
+                  <td>{f.projects?.name || '—'}</td>
+                  <td>{f.casas?.name || '—'}</td>
                   <td>
                     {f.is_ai_detected
-                      ? <span className="badge badge-purple">IA</span>
-                      : <span className="badge badge-green">Manual</span>}
+                      ? <span className='badge badge-purple'>IA</span>
+                      : <span className='badge badge-green'>Manual</span>}
                   </td>
-                  <td style={{ fontFamily: "var(--mono)", fontSize: 12 }}>
-                    {f.cpa_value ? `${f.cpa_currency} ${f.cpa_value}` : "—"}
+                  <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>
+                    {f.cpa_value ? `${f.cpa_currency} ${f.cpa_value}` : '—'}
                   </td>
-                  <td style={{ color: "var(--text3)", fontSize: 12 }}>{f.notes || "—"}</td>
+                  <td style={{ color: 'var(--text3)', fontSize: 12 }}>{f.notes || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -960,10 +960,10 @@ function ConfigPage({ onToast, onRefresh }) {
     setLoading(true);
     try {
       const [p, c, co, s] = await Promise.all([
-        supa("projects?select=*,experts(name)"),
-        supa("casas?select=*"),
-        supa("costs?select=*"),
-        supa("settings?select=*"),
+        supa('projects?select=*,experts(name)'),
+        supa('casas?select=*'),
+        supa('costs?select=*'),
+        supa('settings?select=*'),
       ]);
       setProjects(p); setCasas(c); setCosts(co);
       const sv = {}; s.forEach((x) => sv[x.key] = x.value);
@@ -982,110 +982,110 @@ function ConfigPage({ onToast, onRefresh }) {
     try {
       let expertId = form.expert_id;
       if (form.expert_name) {
-        const ex = await supa("experts", { method: "POST", body: JSON.stringify({ name: form.expert_name }) });
+        const ex = await supa('experts', { method: 'POST', body: JSON.stringify({ name: form.expert_name }) });
         expertId = ex[0]?.id;
       }
-      await supa("projects", { method: "POST", body: JSON.stringify({ name: form.name, expert_id: expertId, status: "active" }) });
-      await load(); onRefresh(); closeModal(); onToast("Projeto criado!", "success");
-    } catch (e) { onToast("Erro ao salvar.", "error"); }
+      await supa('projects', { method: 'POST', body: JSON.stringify({ name: form.name, expert_id: expertId, status: 'active' }) });
+      await load(); onRefresh(); closeModal(); onToast('Projeto criado!', 'success');
+    } catch (e) { onToast('Erro ao salvar.', 'error'); }
     setSaving(false);
   };
 
   const saveCasa = async () => {
     setSaving(true);
     try {
-      await supa("casas", { method: "POST", body: JSON.stringify({ name: form.name, deal_type: form.deal_type || "cpa", cpa_value: parseFloat(form.cpa_value) || null, cpa_currency: form.cpa_currency || "USD", revshare_pct: parseFloat(form.revshare_pct) || null }) });
-      await load(); onRefresh(); closeModal(); onToast("Casa cadastrada!", "success");
-    } catch (e) { onToast("Erro ao salvar.", "error"); }
+      await supa('casas', { method: 'POST', body: JSON.stringify({ name: form.name, deal_type: form.deal_type || 'cpa', cpa_value: parseFloat(form.cpa_value) || null, cpa_currency: form.cpa_currency || 'USD', revshare_pct: parseFloat(form.revshare_pct) || null }) });
+      await load(); onRefresh(); closeModal(); onToast('Casa cadastrada!', 'success');
+    } catch (e) { onToast('Erro ao salvar.', 'error'); }
     setSaving(false);
   };
 
   const saveCost = async () => {
     setSaving(true);
     try {
-      await supa("costs", { method: "POST", body: JSON.stringify({ description: form.description, category: form.category, amount: parseFloat(form.amount), currency: form.currency || "BRL", recurrence: form.recurrence || "monthly", start_date: form.start_date || today(), is_active: true }) });
-      await load(); closeModal(); onToast("Custo cadastrado!", "success");
-    } catch (e) { onToast("Erro ao salvar.", "error"); }
+      await supa('costs', { method: 'POST', body: JSON.stringify({ description: form.description, category: form.category, amount: parseFloat(form.amount), currency: form.currency || 'BRL', recurrence: form.recurrence || 'monthly', start_date: form.start_date || today(), is_active: true }) });
+      await load(); closeModal(); onToast('Custo cadastrado!', 'success');
+    } catch (e) { onToast('Erro ao salvar.', 'error'); }
     setSaving(false);
   };
 
   const saveUSD = async () => {
     setSaving(true);
     try {
-      await supa("settings?key=eq.usd_rate", { method: "PATCH", body: JSON.stringify({ value: String(form.usd_rate) }) });
-      await load(); onRefresh(); closeModal(); onToast("Câmbio atualizado!", "success");
-    } catch (e) { onToast("Erro ao salvar.", "error"); }
+      await supa('settings?key=eq.usd_rate', { method: 'PATCH', body: JSON.stringify({ value: String(form.usd_rate) }) });
+      await load(); onRefresh(); closeModal(); onToast('Câmbio atualizado!', 'success');
+    } catch (e) { onToast('Erro ao salvar.', 'error'); }
     setSaving(false);
   };
 
   const toggleCost = async (id, current) => {
     try {
-      await supa(`costs?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ is_active: !current }) });
+      await supa(`costs?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ is_active: !current }) });
       await load();
     } catch (e) { console.error(e); }
   };
 
-  if (loading) return <div className="loading"><div className="spinner" /> Carregando...</div>;
+  if (loading) return <div className='loading'><div className='spinner' /> Carregando...</div>;
 
   return (
     <div>
-      <div className="section-title">Configurações</div>
+      <div className='section-title'>Configurações</div>
 
       {/* CÂMBIO */}
-      <div className="config-grid">
-        <div className="config-card">
-          <div className="config-card-header">
-            <div className="config-card-title">💱 Câmbio USD</div>
-            <button className="btn-sm" onClick={() => openModal("usd", { usd_rate: settings.usd_rate || "5.00" })}>Editar</button>
+      <div className='config-grid'>
+        <div className='config-card'>
+          <div className='config-card-header'>
+            <div className='config-card-title'>💱 Câmbio USD</div>
+            <button className='btn-sm' onClick={() => openModal('usd', { usd_rate: settings.usd_rate || '5.00' })}>Editar</button>
           </div>
-          <div className="config-item">
-            <span className="config-item-label">1 USD =</span>
-            <span style={{ fontFamily: "var(--mono)", fontWeight: 600 }}>R$ {settings.usd_rate || "5.00"}</span>
+          <div className='config-item'>
+            <span className='config-item-label'>1 USD =</span>
+            <span style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>R$ {settings.usd_rate || '5.00'}</span>
           </div>
         </div>
       </div>
 
       {/* PROJETOS */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>📁 Projetos</div>
-        <button className="btn-sm" onClick={() => openModal("project", { deal_type: "cpa", cpa_currency: "USD" })}>+ Novo</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text2)' }}>📁 Projetos</div>
+        <button className='btn-sm' onClick={() => openModal('project', { deal_type: 'cpa', cpa_currency: 'USD' })}>+ Novo</button>
       </div>
-      <div className="config-grid" style={{ marginBottom: 24 }}>
+      <div className='config-grid' style={{ marginBottom: 24 }}>
         {projects.map((p) => (
-          <div key={p.id} className="config-card">
-            <div className="config-card-title" style={{ marginBottom: 10 }}>{p.name}</div>
-            <div className="config-item"><span className="config-item-label">Expert</span><span>{p.experts?.name || "—"}</span></div>
-            <div className="config-item"><span className="config-item-label">Status</span><span className={`badge ${p.status === "active" ? "badge-green" : "badge-red"}`}>{p.status}</span></div>
+          <div key={p.id} className='config-card'>
+            <div className='config-card-title' style={{ marginBottom: 10 }}>{p.name}</div>
+            <div className='config-item'><span className='config-item-label'>Expert</span><span>{p.experts?.name || '—'}</span></div>
+            <div className='config-item'><span className='config-item-label'>Status</span><span className={`badge ${p.status === 'active' ? 'badge-green' : 'badge-red'}`}>{p.status}</span></div>
           </div>
         ))}
-        {projects.length === 0 && <div className="empty" style={{ gridColumn: "1/-1" }}>Nenhum projeto cadastrado.</div>}
+        {projects.length === 0 && <div className='empty' style={{ gridColumn: '1/-1' }}>Nenhum projeto cadastrado.</div>}
       </div>
 
       {/* CASAS */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>🏠 Casas de Apostas</div>
-        <button className="btn-sm" onClick={() => openModal("casa", { deal_type: "cpa", cpa_currency: "USD" })}>+ Nova</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text2)' }}>🏠 Casas de Apostas</div>
+        <button className='btn-sm' onClick={() => openModal('casa', { deal_type: 'cpa', cpa_currency: 'USD' })}>+ Nova</button>
       </div>
-      <div className="config-grid" style={{ marginBottom: 24 }}>
+      <div className='config-grid' style={{ marginBottom: 24 }}>
         {casas.map((c) => (
-          <div key={c.id} className="config-card">
-            <div className="config-card-title" style={{ marginBottom: 10 }}>{c.name}</div>
-            <div className="config-item"><span className="config-item-label">Modelo</span><span className="badge badge-purple">{c.deal_type.toUpperCase()}</span></div>
-            {c.cpa_value && <div className="config-item"><span className="config-item-label">CPA</span><span style={{ fontFamily: "var(--mono)" }}>{c.cpa_currency} {c.cpa_value}</span></div>}
-            {c.revshare_pct && <div className="config-item"><span className="config-item-label">RevShare</span><span style={{ fontFamily: "var(--mono)" }}>{c.revshare_pct}%</span></div>}
+          <div key={c.id} className='config-card'>
+            <div className='config-card-title' style={{ marginBottom: 10 }}>{c.name}</div>
+            <div className='config-item'><span className='config-item-label'>Modelo</span><span className='badge badge-purple'>{c.deal_type.toUpperCase()}</span></div>
+            {c.cpa_value && <div className='config-item'><span className='config-item-label'>CPA</span><span style={{ fontFamily: 'var(--mono)' }}>{c.cpa_currency} {c.cpa_value}</span></div>}
+            {c.revshare_pct && <div className='config-item'><span className='config-item-label'>RevShare</span><span style={{ fontFamily: 'var(--mono)' }}>{c.revshare_pct}%</span></div>}
           </div>
         ))}
-        {casas.length === 0 && <div className="empty" style={{ gridColumn: "1/-1" }}>Nenhuma casa cadastrada.</div>}
+        {casas.length === 0 && <div className='empty' style={{ gridColumn: '1/-1' }}>Nenhuma casa cadastrada.</div>}
       </div>
 
       {/* CUSTOS */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text2)" }}>💸 Custos Empresariais</div>
-        <button className="btn-sm" onClick={() => openModal("cost", { currency: "BRL", recurrence: "monthly", start_date: today() })}>+ Novo</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text2)' }}>💸 Custos Empresariais</div>
+        <button className='btn-sm' onClick={() => openModal('cost', { currency: 'BRL', recurrence: 'monthly', start_date: today() })}>+ Novo</button>
       </div>
-      <div className="table-card" style={{ marginBottom: 24 }}>
+      <div className='table-card' style={{ marginBottom: 24 }}>
         {costs.length === 0 ? (
-          <div className="empty"><div className="empty-icon">💸</div>Nenhum custo cadastrado.</div>
+          <div className='empty'><div className='empty-icon'>💸</div>Nenhum custo cadastrado.</div>
         ) : (
           <table>
             <thead><tr><th>Descrição</th><th>Categoria</th><th>Valor</th><th>Periodicidade</th><th>Status</th></tr></thead>
@@ -1093,12 +1093,12 @@ function ConfigPage({ onToast, onRefresh }) {
               {costs.map((c) => (
                 <tr key={c.id}>
                   <td>{c.description}</td>
-                  <td style={{ color: "var(--text3)" }}>{c.category || "—"}</td>
-                  <td style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{c.currency} {c.amount}</td>
-                  <td><span className="badge badge-amber">{c.recurrence}</span></td>
+                  <td style={{ color: 'var(--text3)' }}>{c.category || '—'}</td>
+                  <td style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{c.currency} {c.amount}</td>
+                  <td><span className='badge badge-amber'>{c.recurrence}</span></td>
                   <td>
-                    <button className={`badge ${c.is_active ? "badge-green" : "badge-red"}`} style={{ border: "none", cursor: "pointer" }} onClick={() => toggleCost(c.id, c.is_active)}>
-                      {c.is_active ? "Ativo" : "Inativo"}
+                    <button className={`badge ${c.is_active ? 'badge-green' : 'badge-red'}`} style={{ border: 'none', cursor: 'pointer' }} onClick={() => toggleCost(c.id, c.is_active)}>
+                      {c.is_active ? 'Ativo' : 'Inativo'}
                     </button>
                   </td>
                 </tr>
@@ -1109,78 +1109,78 @@ function ConfigPage({ onToast, onRefresh }) {
       </div>
 
       {/* MODALS */}
-      {modal === "usd" && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="modal">
-            <div className="modal-title">Configurar Câmbio</div>
-            <div className="field"><label>1 USD = R$</label><input className="ctrl-input" style={{ width: "100%" }} type="number" step="0.01" value={form.usd_rate} onChange={(e) => setForm({ ...form, usd_rate: e.target.value })} /></div>
-            <div className="modal-actions"><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={saveUSD} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</button></div>
+      {modal === 'usd' && (
+        <div className='modal-overlay' onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className='modal'>
+            <div className='modal-title'>Configurar Câmbio</div>
+            <div className='field'><label>1 USD = R$</label><input className='ctrl-input' style={{ width: '100%' }} type='number' step='0.01' value={form.usd_rate} onChange={(e) => setForm({ ...form, usd_rate: e.target.value })} /></div>
+            <div className='modal-actions'><button className='btn-cancel' onClick={closeModal}>Cancelar</button><button className='btn-save' onClick={saveUSD} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button></div>
           </div>
         </div>
       )}
 
-      {modal === "project" && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="modal">
-            <div className="modal-title">Novo Projeto</div>
-            <div className="modal-grid full">
-              <div className="field"><label>Nome do Projeto</label><input className="ctrl-input" style={{ width: "100%" }} value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="field"><label>Nome do Expert</label><input className="ctrl-input" style={{ width: "100%" }} placeholder="Ex: Laura, Hector" value={form.expert_name || ""} onChange={(e) => setForm({ ...form, expert_name: e.target.value })} /></div>
+      {modal === 'project' && (
+        <div className='modal-overlay' onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className='modal'>
+            <div className='modal-title'>Novo Projeto</div>
+            <div className='modal-grid full'>
+              <div className='field'><label>Nome do Projeto</label><input className='ctrl-input' style={{ width: '100%' }} value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className='field'><label>Nome do Expert</label><input className='ctrl-input' style={{ width: '100%' }} placeholder='Ex: Laura, Hector' value={form.expert_name || ''} onChange={(e) => setForm({ ...form, expert_name: e.target.value })} /></div>
             </div>
-            <div className="modal-actions"><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={saveProject} disabled={saving}>{saving ? "Salvando..." : "Criar"}</button></div>
+            <div className='modal-actions'><button className='btn-cancel' onClick={closeModal}>Cancelar</button><button className='btn-save' onClick={saveProject} disabled={saving}>{saving ? 'Salvando...' : 'Criar'}</button></div>
           </div>
         </div>
       )}
 
-      {modal === "casa" && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="modal">
-            <div className="modal-title">Nova Casa de Apostas</div>
-            <div className="modal-grid">
-              <div className="field"><label>Nome</label><input className="ctrl-input" style={{ width: "100%" }} value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div className="field"><label>Modelo</label>
-                <select className="ctrl-select" style={{ width: "100%" }} value={form.deal_type} onChange={(e) => setForm({ ...form, deal_type: e.target.value })}>
-                  <option value="cpa">CPA</option><option value="revshare">RevShare</option><option value="hybrid">Híbrido</option>
+      {modal === 'casa' && (
+        <div className='modal-overlay' onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className='modal'>
+            <div className='modal-title'>Nova Casa de Apostas</div>
+            <div className='modal-grid'>
+              <div className='field'><label>Nome</label><input className='ctrl-input' style={{ width: '100%' }} value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className='field'><label>Modelo</label>
+                <select className='ctrl-select' style={{ width: '100%' }} value={form.deal_type} onChange={(e) => setForm({ ...form, deal_type: e.target.value })}>
+                  <option value='cpa'>CPA</option><option value='revshare'>RevShare</option><option value='hybrid'>Híbrido</option>
                 </select>
               </div>
-              {(form.deal_type === "cpa" || form.deal_type === "hybrid") && <>
-                <div className="field"><label>Valor CPA</label><input className="ctrl-input" style={{ width: "100%" }} type="number" value={form.cpa_value || ""} onChange={(e) => setForm({ ...form, cpa_value: e.target.value })} /></div>
-                <div className="field"><label>Moeda</label>
-                  <select className="ctrl-select" style={{ width: "100%" }} value={form.cpa_currency} onChange={(e) => setForm({ ...form, cpa_currency: e.target.value })}>
-                    <option value="USD">USD</option><option value="BRL">BRL</option>
+              {(form.deal_type === 'cpa' || form.deal_type === 'hybrid') && <>
+                <div className='field'><label>Valor CPA</label><input className='ctrl-input' style={{ width: '100%' }} type='number' value={form.cpa_value || ''} onChange={(e) => setForm({ ...form, cpa_value: e.target.value })} /></div>
+                <div className='field'><label>Moeda</label>
+                  <select className='ctrl-select' style={{ width: '100%' }} value={form.cpa_currency} onChange={(e) => setForm({ ...form, cpa_currency: e.target.value })}>
+                    <option value='USD'>USD</option><option value='BRL'>BRL</option>
                   </select>
                 </div>
               </>}
-              {(form.deal_type === "revshare" || form.deal_type === "hybrid") && (
-                <div className="field"><label>RevShare %</label><input className="ctrl-input" style={{ width: "100%" }} type="number" value={form.revshare_pct || ""} onChange={(e) => setForm({ ...form, revshare_pct: e.target.value })} /></div>
+              {(form.deal_type === 'revshare' || form.deal_type === 'hybrid') && (
+                <div className='field'><label>RevShare %</label><input className='ctrl-input' style={{ width: '100%' }} type='number' value={form.revshare_pct || ''} onChange={(e) => setForm({ ...form, revshare_pct: e.target.value })} /></div>
               )}
             </div>
-            <div className="modal-actions"><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={saveCasa} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</button></div>
+            <div className='modal-actions'><button className='btn-cancel' onClick={closeModal}>Cancelar</button><button className='btn-save' onClick={saveCasa} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button></div>
           </div>
         </div>
       )}
 
-      {modal === "cost" && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="modal">
-            <div className="modal-title">Novo Custo</div>
-            <div className="modal-grid">
-              <div className="field"><label>Descrição</label><input className="ctrl-input" style={{ width: "100%" }} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-              <div className="field"><label>Categoria</label><input className="ctrl-input" style={{ width: "100%" }} placeholder="Ex: Software, Equipe" value={form.category || ""} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
-              <div className="field"><label>Valor</label><input className="ctrl-input" style={{ width: "100%" }} type="number" value={form.amount || ""} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
-              <div className="field"><label>Moeda</label>
-                <select className="ctrl-select" style={{ width: "100%" }} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
-                  <option value="BRL">BRL</option><option value="USD">USD</option>
+      {modal === 'cost' && (
+        <div className='modal-overlay' onClick={(e) => e.target === e.currentTarget && closeModal()}>
+          <div className='modal'>
+            <div className='modal-title'>Novo Custo</div>
+            <div className='modal-grid'>
+              <div className='field'><label>Descrição</label><input className='ctrl-input' style={{ width: '100%' }} value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className='field'><label>Categoria</label><input className='ctrl-input' style={{ width: '100%' }} placeholder='Ex: Software, Equipe' value={form.category || ''} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+              <div className='field'><label>Valor</label><input className='ctrl-input' style={{ width: '100%' }} type='number' value={form.amount || ''} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
+              <div className='field'><label>Moeda</label>
+                <select className='ctrl-select' style={{ width: '100%' }} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
+                  <option value='BRL'>BRL</option><option value='USD'>USD</option>
                 </select>
               </div>
-              <div className="field"><label>Periodicidade</label>
-                <select className="ctrl-select" style={{ width: "100%" }} value={form.recurrence} onChange={(e) => setForm({ ...form, recurrence: e.target.value })}>
-                  <option value="once">Único</option><option value="daily">Diário</option><option value="weekly">Semanal</option><option value="monthly">Mensal</option><option value="annual">Anual</option>
+              <div className='field'><label>Periodicidade</label>
+                <select className='ctrl-select' style={{ width: '100%' }} value={form.recurrence} onChange={(e) => setForm({ ...form, recurrence: e.target.value })}>
+                  <option value='once'>Único</option><option value='daily'>Diário</option><option value='weekly'>Semanal</option><option value='monthly'>Mensal</option><option value='annual'>Anual</option>
                 </select>
               </div>
-              <div className="field"><label>Início</label><input className="ctrl-input" style={{ width: "100%" }} type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
+              <div className='field'><label>Início</label><input className='ctrl-input' style={{ width: '100%' }} type='date' value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></div>
             </div>
-            <div className="modal-actions"><button className="btn-cancel" onClick={closeModal}>Cancelar</button><button className="btn-save" onClick={saveCost} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</button></div>
+            <div className='modal-actions'><button className='btn-cancel' onClick={closeModal}>Cancelar</button><button className='btn-save' onClick={saveCost} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button></div>
           </div>
         </div>
       )}
@@ -1190,19 +1190,19 @@ function ConfigPage({ onToast, onRefresh }) {
 
 // ─── APP SHELL ────────────────────────────────────────────────────────────────
 const NAV = [
-  { id: "dashboard", label: "Dashboard", icon: "📊", section: "principal" },
-  { id: "ftds", label: "FTDs", icon: "✅", section: "operações" },
-  { id: "config", label: "Configurações", icon: "⚙️", section: "sistema" },
+  { id: 'dashboard', label: 'Dashboard', icon: '📊', section: 'principal' },
+  { id: 'ftds', label: 'FTDs', icon: '✅', section: 'operações' },
+  { id: 'config', label: 'Configurações', icon: '⚙️', section: 'sistema' },
 ];
 
 function App() {
-  const [authed, setAuthed] = useState(() => !!localStorage.getItem("dash_auth"));
-  const [page, setPage] = useState("dashboard");
-  const [currency, setCurrency] = useState("BRL");
+  const [authed, setAuthed] = useState(() => !!localStorage.getItem('dash_auth'));
+  const [page, setPage] = useState('dashboard');
+  const [currency, setCurrency] = useState('BRL');
   const [rate, setRate] = useState(5);
   const [dateFrom, setDateFrom] = useState(monthStart());
   const [dateTo, setDateTo] = useState(today());
-  const [projectFilter, setProjectFilter] = useState("");
+  const [projectFilter, setProjectFilter] = useState('');
   const [projects, setProjects] = useState([]);
   const [casas, setCasas] = useState([]);
   const [toast, setToast] = useState(null);
@@ -1211,19 +1211,19 @@ function App() {
   const loadMeta = useCallback(async () => {
     try {
       const [p, c, s] = await Promise.all([
-        supa("projects?select=*"),
-        supa("casas?select=*"),
-        supa("settings?select=*"),
+        supa('projects?select=*'),
+        supa('casas?select=*'),
+        supa('settings?select=*'),
       ]);
       setProjects(p); setCasas(c);
-      const usd = s.find((x) => x.key === "usd_rate");
+      const usd = s.find((x) => x.key === 'usd_rate');
       if (usd) setRate(parseFloat(usd.value));
     } catch (e) { console.error(e); }
   }, []);
 
   useEffect(() => { if (authed) loadMeta(); }, [authed, refreshKey]);
 
-  const showToast = (msg, type = "success") => setToast({ msg, type });
+  const showToast = (msg, type = 'success') => setToast({ msg, type });
 
   if (!authed) return (
     <>
@@ -1237,53 +1237,53 @@ function App() {
   return (
     <>
       <style>{css}</style>
-      <div className="app">
+      <div className='app'>
         {/* SIDEBAR */}
-        <aside className="sidebar">
-          <div className="sidebar-logo">Bryan<span>HQ</span></div>
-          <nav className="sidebar-nav">
+        <aside className='sidebar'>
+          <div className='sidebar-logo'>Bryan<span>HQ</span></div>
+          <nav className='sidebar-nav'>
             {sections.map((sec) => (
-              <div key={sec} className="nav-section">
-                <div className="nav-label">{sec}</div>
+              <div key={sec} className='nav-section'>
+                <div className='nav-label'>{sec}</div>
                 {NAV.filter((n) => n.section === sec).map((n) => (
-                  <button key={n.id} className={`nav-item ${page === n.id ? "active" : ""}`} onClick={() => setPage(n.id)}>
-                    <span className="nav-icon">{n.icon}</span>
+                  <button key={n.id} className={`nav-item ${page === n.id ? 'active' : ''}`} onClick={() => setPage(n.id)}>
+                    <span className='nav-icon'>{n.icon}</span>
                     {n.label}
                   </button>
                 ))}
               </div>
             ))}
           </nav>
-          <div className="sidebar-footer">
-            <button className="btn-logout" onClick={() => { localStorage.removeItem("dash_auth"); setAuthed(false); }}>
+          <div className='sidebar-footer'>
+            <button className='btn-logout' onClick={() => { localStorage.removeItem('dash_auth'); setAuthed(false); }}>
               🚪 Sair
             </button>
           </div>
         </aside>
 
         {/* MAIN */}
-        <main className="main">
-          <div className="topbar">
-            <div className="topbar-title">
+        <main className='main'>
+          <div className='topbar'>
+            <div className='topbar-title'>
               {NAV.find((n) => n.id === page)?.icon} {NAV.find((n) => n.id === page)?.label}
             </div>
-            {page === "dashboard" && (
-              <div className="topbar-controls">
-                <select className="ctrl-select" value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
-                  <option value="">Todos os projetos</option>
+            {page === 'dashboard' && (
+              <div className='topbar-controls'>
+                <select className='ctrl-select' value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
+                  <option value=''>Todos os projetos</option>
                   {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
-                <input className="ctrl-input" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-                <input className="ctrl-input" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-                <select className="ctrl-select" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                  <option value="BRL">R$ BRL</option>
-                  <option value="USD">$ USD</option>
+                <input className='ctrl-input' type='date' value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                <input className='ctrl-input' type='date' value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                <select className='ctrl-select' value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                  <option value='BRL'>R$ BRL</option>
+                  <option value='USD'>$ USD</option>
                 </select>
               </div>
             )}
           </div>
 
-          {page === "dashboard" && (
+          {page === 'dashboard' && (
             <Dashboard
               key={`${dateFrom}-${dateTo}-${projectFilter}-${currency}-${rate}-${refreshKey}`}
               currency={currency} rate={rate}
@@ -1291,8 +1291,8 @@ function App() {
               projectFilter={projectFilter}
             />
           )}
-          {page === "ftds" && <FTDsPage projects={projects} casas={casas} onToast={showToast} />}
-          {page === "config" && <ConfigPage onToast={showToast} onRefresh={() => setRefreshKey((k) => k + 1)} />}
+          {page === 'ftds' && <FTDsPage projects={projects} casas={casas} onToast={showToast} />}
+          {page === 'config' && <ConfigPage onToast={showToast} onRefresh={() => setRefreshKey((k) => k + 1)} />}
         </main>
       </div>
 
@@ -1302,8 +1302,9 @@ function App() {
 }
 
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
+ReactDOM.createRoot(document.getElementById('root')).render(
+  React.createElement(App)
+);
   </script>
 </body>
 </html>
